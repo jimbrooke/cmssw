@@ -86,6 +86,8 @@ namespace l1t {
     std::vector<edm::EDGetToken> ecalToken_;  // this is a crazy way to store multi-BX info
     std::vector<edm::EDGetToken> hcalToken_;  // should be replaced with a BXVector< > or similar
 
+    int hcalTPVersion_;
+
     // parameters
     unsigned long long paramsCacheId_;
     unsigned fwv_;
@@ -103,12 +105,13 @@ l1t::Stage2Layer1Producer::Stage2Layer1Producer(const edm::ParameterSet& ps) :
   verbosity_(ps.getParameter<int>("verbosity")),
   bxFirst_(ps.getParameter<int>("bxFirst")),
   bxLast_(ps.getParameter<int>("bxLast")),
-  ietaMin_(-32),
-  ietaMax_(32),
-  iphiMin_(1),
-  iphiMax_(72),
+  ietaMin_(ps.getParameter<int>("ietaMin")),
+  ietaMax_(ps.getParameter<int>("ietaMax")),
+  iphiMin_(ps.getParameter<int>("iphiMin")),
+  iphiMax_(ps.getParameter<int>("ietaMax")),
   ecalToken_(bxLast_+1-bxFirst_),
   hcalToken_(bxLast_+1-bxFirst_),
+  hcalTPVersion_(ps.getParameter<int>("hcalTPVersion")),
   paramsCacheId_(0),
   params_(0)
 {
@@ -204,6 +207,8 @@ l1t::Stage2Layer1Producer::produce(edm::Event& iEvent, const edm::EventSetup& iS
     HcalTrigPrimDigiCollection::const_iterator hcalItr;
     int nHcal=0;
     for (hcalItr=hcalTPs->begin(); hcalItr!=hcalTPs->end(); ++hcalItr, ++nHcal) {
+
+      if (hcalItr->id().version() != hcalTPVersion_) continue;
     
       int ieta = hcalItr->id().ieta(); 
       int iphi = hcalItr->id().iphi();
