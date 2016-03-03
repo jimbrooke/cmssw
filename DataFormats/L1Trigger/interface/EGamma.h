@@ -36,13 +36,32 @@ namespace l1t {
 
     ~EGamma();
 
+    void setTowerIEta(short int ieta);  // ieta of seed tower
+    void setTowerIPhi(short int iphi);  // iphi of seed tower
+    void setRawEt(short int pt);        // raw (uncalibrated) cluster sum
+    void setIsoEt(short int iso);       // raw isolation sum - cluster sum
+    void setFootprintEt(short int fp);  // raw footprint
+    void setNTT(short int ntt);         // n towers above threshold
+    void setShape(short int s);         // cluster shape variable
+
+    short int towerIEta();
+    short int towerIPhi();
+    short int rawEt();
+    short int isoEt();
+    short int footprintEt();
+    short int nTT();
+    short int shape();
 
   private:
 
-    // additional hardware quantities common to L1 global jet
-    // there are currently none
-
-
+    // additional hardware quantities common to L1 global EG
+    short int towerIEta_;
+    short int towerIPhi_;
+    short int rawEt_;
+    short int isoEt_;
+    short int footprintEt_;
+    short int nTT_;
+    short int shape_;
 
   };
 
