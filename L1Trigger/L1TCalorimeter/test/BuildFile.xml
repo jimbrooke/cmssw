@@ -1,0 +1,2 @@
+<use name="L1Trigger/L1TCalorimeter"/>
+<bin name="testCaloTools" file="testCaloTools.cpp"/>

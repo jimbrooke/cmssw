@@ -222,9 +222,9 @@ int l1t::CaloTools::regionEta(int ieta)
 
   // in HF
   if (ieta<0)
-    return 4 - ceil( double (abs(ieta)-29) /4. );
+    return 4 - ceil( double (abs(ieta)-29) /3. );
   else
-    return ceil( double (abs(ieta)-29) /4. ) + 17;
+    return ceil( double (abs(ieta)-29) /3. ) + 17;
 
 }
 
