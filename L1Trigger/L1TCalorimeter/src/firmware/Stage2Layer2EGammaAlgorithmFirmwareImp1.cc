@@ -92,7 +92,8 @@ void l1t::Stage2Layer2EGammaAlgorithmFirmwareImp1::processEvent(const std::vecto
       int towerEtNN = towerNN.hwPt();
       int towerEtSS = towerSS.hwPt();
 
-      if(abs(iEta)> 28 )
+
+      if(abs(iEta)>28)
 	continue;
 
       // initialize egamma from cluster
@@ -127,7 +128,6 @@ void l1t::Stage2Layer2EGammaAlgorithmFirmwareImp1::processEvent(const std::vecto
       if(shapeBit)  qual |= (0x1<<2); // third bit = shape
       egamma.setHwQual( qual ); 
 
-
       // Isolation 
       int isoLeftExtension = params_->egIsoAreaNrTowersEta();
       int isoRightExtension = params_->egIsoAreaNrTowersEta();
@@ -142,6 +142,7 @@ void l1t::Stage2Layer2EGammaAlgorithmFirmwareImp1::processEvent(const std::vecto
 					  -1*params_->egIsoAreaNrTowersPhi(),params_->egIsoAreaNrTowersPhi(),
 					  params_->egPUSParam(2));
 
+
       int hwFootPrint = isoCalEgHwFootPrint(cluster,towers);
 
       int nrTowers = CaloTools::calNrTowers(-1*params_->egPUSParam(1),
@@ -153,9 +154,10 @@ void l1t::Stage2Layer2EGammaAlgorithmFirmwareImp1::processEvent(const std::vecto
       egamma.setHwIso(isolBit);
       
       // Energy calibration
-      // Corrections function of ieta, ET, and cluster shape
+      // Corrections function of ieta, ET, and cluster shape      
       int calibPt = calibratedPt(cluster, egamma.hwPt());
       egamma.setHwPt(calibPt);
+
 
       // Physical eta/phi. Computed from ieta/iphi of the seed tower and the fine-grain position within the seed
       double eta = 0.;
@@ -210,6 +212,7 @@ void l1t::Stage2Layer2EGammaAlgorithmFirmwareImp1::processEvent(const std::vecto
     int fgBit = egamma.hwQual() & (0x1);
     int hOverEBit = egamma.hwQual()>>1 & (0x1);
     int shapeBit = egamma.hwQual()>>2 & (0x1);
+
     if(fgBit && shapeBit && hOverEBit){
       if(egamma.hwEta()<0)
 	egammas_eta_neg.push_back(egamma);
@@ -237,6 +240,25 @@ void l1t::Stage2Layer2EGammaAlgorithmFirmwareImp1::processEvent(const std::vecto
 
 }
 
+/*****************************************************************/
+bool l1t::Stage2Layer2EGammaAlgorithmFirmwareImp1::idHOverE(const l1t::CaloCluster& clus, int hwPt)
+/*****************************************************************/
+{
+  unsigned int lutAddress = idHOverELutIndex(clus.hwEta(), hwPt); 
+  bool hOverEBit = ( clus.hOverE() <= params_->egMaxHOverELUT()->data(lutAddress) );
+  hOverEBit |= ( clus.hwPt()>=floor(params_->egMaxPtHOverE()/params_->egLsb()) );
+  return hOverEBit;
+}
+
+/*****************************************************************/
+unsigned int l1t::Stage2Layer2EGammaAlgorithmFirmwareImp1::idHOverELutIndex(int iEta, int E)
+/*****************************************************************/
+{
+  unsigned int iEtaNormed = abs(iEta);
+  if(iEtaNormed>28) iEtaNormed = 28;
+  if(E>255) E = 255;
+  return E+(iEtaNormed-1)*256;
+}
 
 /*****************************************************************/
 bool l1t::Stage2Layer2EGammaAlgorithmFirmwareImp1::idShape(const l1t::CaloCluster& clus, int hwPt)
@@ -323,7 +345,6 @@ unsigned l1t::Stage2Layer2EGammaAlgorithmFirmwareImp1::isoLutIndex(int iEta,unsi
       unsigned int compressednTT = params_->egCompressShapesLUT()->data((0x1<<7)+(0x1<<8)+(0x1<<5)+nrTowers);
       unsigned int compressedE     = params_->egCompressShapesLUT()->data((0x1<<7)+E)<<1;
       unsigned int compressedEta   = params_->egCompressShapesLUT()->data((0x1<<7)+(0x1<<8)+iEtaNormed)<<1;
-
       return (compressednTT | compressedE | compressedEta);
     }
   
@@ -363,13 +384,14 @@ int l1t::Stage2Layer2EGammaAlgorithmFirmwareImp1::calibratedPt(const l1t::CaloCl
 
   unsigned int lutAddress = calibrationLutIndex(clus.hwEta(), hwPt, shape); 
   int corr = params_->egCalibrationLUT()->data(lutAddress); // 9 bits. [0,2]. corrPt = (corr)*rawPt
-  // the correction can increase or decrease the energy
+  // the correction can increase or decrease the energy by a factor 2 at most
   int rawPt = hwPt;
   if(rawPt>255)
     rawPt = 255;// 8 bits threshold
   int corrXrawPt = corr*rawPt;// 17 bits
-  // round corr*rawPt
-  int corrPt = corrXrawPt>>8;// 8 MS bits (truncation)
+  int corrPt = corrXrawPt>>8;// 9 MS bits
+  //Saturation done in Demux
+  //if(corrPt>255) corrPt = 255;// 8 bits threshold
   return corrPt;
 }
 
