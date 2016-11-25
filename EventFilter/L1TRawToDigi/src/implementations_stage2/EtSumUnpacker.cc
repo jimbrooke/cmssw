@@ -102,15 +102,6 @@ namespace stage2 {
 
        res_->push_back(bx,ht);
 
-
-       //HI-SUM
-
-       l1t::EtSum towCount = l1t::EtSum();
-       towCount.setHwPt( (raw_data>>12) & 0x1FFF );
-       towCount.setType( (l1t::EtSum::kTowerCount) );
-
-       res_->push_back(bx, towCount);
-
        //MBHFMT0
 
        l1t::EtSum mbm0 = l1t::EtSum();
@@ -181,7 +172,7 @@ namespace stage2 {
        LogDebug("L1T") << "METHF: phi " << methf.hwPhi() << " pT " << methf.hwPt() << " bx " << bx;
 
        res_->push_back(bx,methf);
-      
+
        // MHT with HF
 
        raw_data = block.payload()[iFrame+5];
@@ -196,8 +187,19 @@ namespace stage2 {
        LogDebug("L1T") << "MHThf: phi " << mhthf.hwPhi() << " pT " << mhthf.hwPt() << " bx " << bx;
 
        res_->push_back(bx,mhthf);
+
+       //HI-SUM
        
-       
+       raw_data = block.payload()[iFrame+1];
+
+       l1t::EtSum towCount = l1t::EtSum();
+       towCount.setHwPt( (raw_data>>12) & 0x1FFF );
+       towCount.setType( (l1t::EtSum::kTowerCount) );
+       towCount.setP4( l1t::CaloTools::p4Demux(&towCount) );
+
+       res_->push_back(bx, towCount);
+    
+   
      }
 
      return true;
